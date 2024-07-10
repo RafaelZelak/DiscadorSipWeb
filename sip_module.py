@@ -489,9 +489,7 @@ def main():
 
     account.shutdown()
     ep.libDestroy()
-    atualizar_estado_ligacao('desconectada')
-    atualizar_estado_ligacao_db('desconectada')
-    
+    atualizar_estado_ligacao('desconectada')    
     
 
 # Função para fazer uma chamada
@@ -507,7 +505,6 @@ def make_call(account, destination_number):
     prm.opt.videoCount = 0
     call.makeCall(destination, prm)
     atualizar_estado_ligacao('conectada')
-    atualizar_estado_ligacao_db('conectada')
     print(f"Chamada para {destination_number} iniciada.")
     return call
 

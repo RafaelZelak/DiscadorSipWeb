@@ -1,55 +1,90 @@
+import json
 import sqlite3
 
-# Conectar ao banco de dados (será criado se não existir)
-conn = sqlite3.connect('SipUserDB.db')
+def obter_user_id():
+    with open('id_salvo.json', 'r') as file:
+        data = json.load(file)
+        return data.get('id')
 
-# Criar um cursor para executar comandos SQL
-cursor = conn.cursor()
+def atualizar_state_db(estado):
+    user_id = obter_user_id()
 
-# Comando SQL para criar a tabela usuario
-create_usuario_table_sql = '''
-CREATE TABLE IF NOT EXISTS usuario (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    ramal TEXT,
-    sipServer TEXT
-);
-'''
+    with sqlite3.connect('SipUserDB.db') as conn:
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT IDusuario FROM chamada WHERE IDusuario = ?', (user_id,))
+        existing_user = cursor.fetchone()
 
-# Comando SQL para criar a tabela chamada
-create_chamada_table_sql = '''
-CREATE TABLE IF NOT EXISTS chamada (
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDusuario INTEGER,
-    state TEXT,
-    recive TEXT,
-    caller TEXT,
-    FOREIGN KEY (IDusuario) REFERENCES usuario (ID)
-);
-'''
+        if existing_user:
+            cursor.execute('UPDATE chamada SET state = ? WHERE IDusuario = ?', (estado, user_id))
+        else:
+            cursor.execute('INSERT INTO chamada (IDusuario, state) VALUES (?, ?)', (user_id, estado))
+        
+        conn.commit()
 
-# Executar os comandos SQL para criar as tabelas
-cursor.execute(create_usuario_table_sql)
-cursor.execute(create_chamada_table_sql)
+def atualizar_caller_db(estado):
+    user_id = obter_user_id()
 
-# Comando SQL para adicionar os novos campos na tabela usuario
-alter_table_sql = '''
-ALTER TABLE usuario
-ADD COLUMN name TEXT,
-ADD COLUMN ramal TEXT,
-ADD COLUMN sipServer TEXT,
-ADD COLUMN senha TEXT;
-'''
+    with sqlite3.connect('SipUserDB.db') as conn:
+        cursor = conn.cursor()
 
-# Executar o comando SQL de alteração da tabela usuario
-cursor.execute(alter_table_sql)
+        cursor.execute('SELECT IDusuario FROM chamada WHERE IDusuario = ?', (user_id,))
+        existing_user = cursor.fetchone()
 
-# Confirmar as alterações
-conn.commit()
+        if existing_user:
+            cursor.execute('UPDATE chamada SET caller = ? WHERE IDusuario = ?', (estado, user_id))
+        else:
+            cursor.execute('INSERT INTO chamada (IDusuario, caller) VALUES (?, ?)', (user_id, estado))
+        
+        conn.commit()
 
-# Fechar a conexão com o banco de dados
-conn.close()
+def atualizar_recive_db(estado):
+    user_id = obter_user_id()
 
-print("Banco de dados criado com sucesso.")
+    with sqlite3.connect('SipUserDB.db') as conn:
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT IDusuario FROM chamada WHERE IDusuario = ?', (user_id,))
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+            cursor.execute('UPDATE chamada SET recive = ? WHERE IDusuario = ?', (estado, user_id))
+        else:
+            cursor.execute('INSERT INTO chamada (IDusuario, recive) VALUES (?, ?)', (user_id, estado))
+        
+        conn.commit()
+
+def get_state_db():
+    user_id = obter_user_id()
+    with sqlite3.connect('SipUserDB.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT chamada.state FROM chamada INNER JOIN usuario ON chamada.IDusuario = usuario.ID WHERE usuario.ID = ?", (user_id,))
+        states = cursor.fetchall()
+        if states:
+            return states[0][0].strip()
+        else:
+            return None
+
+
+def get_callers_db():
+    user_id = obter_user_id()
+    with sqlite3.connect('SipUserDB.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT chamada.caller FROM chamada INNER JOIN usuario ON chamada.IDusuario = usuario.ID WHERE usuario.ID = ?", (user_id,))
+        callers = cursor.fetchall()
+        if callers:
+            return callers[0][0].strip()
+        else:
+            return None
+
+def get_recive_db():
+    user_id = obter_user_id()
+    with sqlite3.connect('SipUserDB.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT chamada.recive FROM chamada INNER JOIN usuario ON chamada.IDusuario = usuario.ID WHERE usuario.ID = ?", (user_id,))
+        recivers = cursor.fetchall()
+        if recivers:
+            return recivers[0][0].strip()
+        else:
+            return None
+        
