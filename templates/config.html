@@ -14,45 +14,82 @@
 </head>
 <body>
     <script>
-        fetch('/lista_usuarios')
-            .then(response => response.json())
-            .then(data => {
-                let tableBody = document.getElementById('userTableBody');
-                data.forEach(row => {
-                    let tr = document.createElement('tr');
-                    let button = document.createElement('button');
-                    button.className = 'table-button';
-                    button.style.display = 'flex';
-                    button.style.justifyContent = 'space-between';
-                    button.style.width = '100%';
-                    button.addEventListener('click', function() {
-                        // Enviar apenas o ID para o servidor Flask via AJAX
-                        fetch(`/botao_clicado/${row[0]}`, {
-                            method: 'POST',
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Resposta do servidor:', data); // Exemplo de resposta do servidor
-                            // Aqui você pode manipular a resposta do servidor conforme necessário
-                        })
-                        .catch(error => console.error('Erro ao enviar dados para o servidor:', error));
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/lista_usuarios')
+                .then(response => response.json())
+                .then(data => {
+                    let tableBody = document.getElementById('userTableBody');
+                    data.forEach(row => {
+                        let tr = document.createElement('tr');
+                        let button = document.createElement('button');
+                        button.className = 'table-button';
+                        button.style.display = 'flex';
+                        button.style.justifyContent = 'space-between';
+                        button.style.width = '100%';
+                        button.addEventListener('click', function() {
+                            // Open modal
+                            let modal = document.getElementById('confirmationModal');
+                            let confirmBtn = document.getElementById('confirmBtn');
+                            let cancelBtn = document.getElementById('cancelBtn');
+                            modal.style.display = 'block';
+        
+                            // Confirm button click event
+                            confirmBtn.onclick = function() {
+                                fetch(`/botao_clicado/${row[0]}`, {
+                                    method: 'POST',
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log('Resposta do servidor:', data);
+                                })
+                                .catch(error => console.error('Erro ao enviar dados para o servidor:', error));
+                                modal.style.display = 'none';
+                            };
+        
+                            // Cancel button or close (x) click event
+                            cancelBtn.onclick = function() {
+                                modal.style.display = 'none';
+                            };
+        
+                            // Close modal when clicking on <span> (x)
+                            document.querySelector('.close').onclick = function() {
+                                modal.style.display = 'none';
+                            };
+        
+                            // Close modal when clicking anywhere outside of the modal
+                            window.onclick = function(event) {
+                                if (event.target == modal) {
+                                    modal.style.display = 'none';
+                                }
+                            };
+                        });
+                        button.innerHTML = `
+                            <span>${row[2]}</span>
+                            <span class="ramal_span">${row[1]}</span>
+                            <img class="edit-icon" src="https://i.postimg.cc/Gmw8SMMN/edit-btn.png" style="width: 6%; height: 6%;">
+                            <img class="delete-icon" src="https://i.postimg.cc/vmG1G4wt/delete-btn.png" style="width: 6%; height: 6%;">
+                        `;
+                        let td = document.createElement('td');
+                        td.colSpan = '2';
+                        td.appendChild(button);
+                        tr.appendChild(td);
+                        tableBody.appendChild(tr);
                     });
-                    button.innerHTML = `
-                        <span>${row[2]}</span>
-                        <span class="ramal_span">${row[1]}</span>
-                        <img class="edit-icon" src="https://i.postimg.cc/Gmw8SMMN/edit-btn.png" style="width: 6%; height: 6%;">
-                        <img class="delete-icon" src="https://i.postimg.cc/vmG1G4wt/delete-btn.png" style="width: 6%; height: 6%;">
-                    `;
-                    let td = document.createElement('td');
-                    td.colSpan = '2';
-                    td.appendChild(button);
-                    tr.appendChild(td);
-                    tableBody.appendChild(tr);
-                });
-            })
-            .catch(error => console.error('Erro ao obter dados:', error));
+                })
+                .catch(error => console.error('Erro ao carregar dados dos usuários:', error));
+        });
+        
     </script>
     
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Você realmente quer escolher este ramal?</p>
+            <button id="confirmBtn">Confirmar</button>
+            <button id="cancelBtn">Cancelar</button>
+        </div>
+    </div>
+
     <div class="config-page">
         <div class="softphone">
             <a href="{{ url_for('index') }}?timestamp={{ timestamp }}" onclick="limparCache()">
