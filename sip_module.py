@@ -11,6 +11,7 @@ import configparser
 import sqlite3
 import base64
 import json
+import database as db
 
 
 # Variável global para o endpoint
@@ -39,11 +40,7 @@ def treat_caller_number():
     else:  # It's a name
         caller_number_treated = cleaned_number
     
-    config = configparser.ConfigParser()
-    config.read('state.cfg')
-    config.set('RECEIVING', 'caller', caller_number_treated)
-    with open('state.cfg', 'w') as configfile:
-        config.write(configfile)
+    db.atualizar_caller_db(caller_number_treated)
         
 def wait_for_user_input():
     global caller_number, answer_call, caller_number_treated
@@ -53,42 +50,19 @@ def wait_for_user_input():
     print(caller_number_treated)
 
     while True:
-        try:
-            config = configparser.ConfigParser()
-            config.read('state.cfg')
-            conteudo = config.get('RECEIVING', 'recive').strip()
-        except FileNotFoundError:
-            print("O arquivo recive.cfg não foi encontrado.")
-            time.sleep(1)
-            continue
-        except IOError as e:
-            print(f"Erro ao ler o arquivo recive.cfg: {e}")
-            time.sleep(1)
-            continue
-
+        
+        conteudo = db.get_recive_db
+        
         if conteudo == 'Atendida':
             answer_call = True
             atualizar_estado_ligacao('desconectada')
-            
-            config = configparser.ConfigParser()
-            config.read('state.cfg')
-            config.set('RECEIVING', 'recive', '')
-            with open('state.cfg', 'w') as configfile:
-                config.write(configfile)
-            configfile.close()
-            
+            db.atualizar_recive_db('')
             break
+        
         elif conteudo == 'Recusada':
             answer_call = False
             atualizar_estado_ligacao('conectada')
-            
-            config = configparser.ConfigParser()
-            config.read('state.cfg')
-            config.set('RECEIVING', 'recive', '')
-            with open('state.cfg', 'w') as configfile:
-                config.write(configfile)
-            configfile.close()
-            
+            db.atualizar_recive_db('')
             break
         else:
             time.sleep(1)
@@ -207,31 +181,13 @@ def atender_ligacao(estado):
     conn.close()
 
 def atualizar_estado_ligacao(estado):
-    config = configparser.ConfigParser()
-    config.read('state.cfg')
-    config.set('CALL', 'state', estado)
-    
-    with open('state.cfg', 'w') as configfile:
-        config.write(configfile)
-    configfile.close()
+    db.atualizar_state_db(estado)
 
 def rebeber_ligação(estado):
-    config = configparser.ConfigParser()
-    config.read('state.cfg')
-    config.set('CALL', 'state', estado)
-    
-    with open('state.cfg', 'w') as configfile:
-        config.write(configfile)
-    configfile.close()
+    db.atualizar_state_db(estado)
 
 def atender_ligação(estado):
-    config = configparser.ConfigParser()
-    config.read('state.cfg')
-    config.set('CALL', 'state', estado)
-    
-    with open('state.cfg', 'w') as configfile:
-        config.write(configfile)
-    configfile.close()
+    db.atualizar_state_db(estado)
 
          
 # Classe para representar uma chamada
@@ -246,12 +202,7 @@ class MyCall(pj.Call):
         if call_info.state == pj.PJSIP_INV_STATE_DISCONNECTED:
             print("Call disconnected")
             
-            config = configparser.ConfigParser()
-            config.read('state.cfg')
-            config.set('RECEIVING', 'caller', '')
-            with open('state.cfg', 'w') as configfile:
-                config.write(configfile)
-            configfile.close()
+            db.atualizar_caller_db('')
                 
             answer_call = False
             atualizar_estado_ligacao('desconectada')

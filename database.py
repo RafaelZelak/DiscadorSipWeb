@@ -72,10 +72,10 @@ def get_callers_db():
         cursor = conn.cursor()
         cursor.execute("SELECT chamada.caller FROM chamada INNER JOIN usuario ON chamada.IDusuario = usuario.ID WHERE usuario.ID = ?", (user_id,))
         callers = cursor.fetchall()
-        if callers:
+        if callers and callers[0][0] is not None:
             return callers[0][0].strip()
         else:
-            return None
+            return ''
 
 def get_recive_db():
     user_id = obter_user_id()

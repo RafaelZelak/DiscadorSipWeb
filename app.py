@@ -12,6 +12,7 @@ import hashlib
 import time
 import sqlite3
 import base64
+import database as db
 
 #logger
 
@@ -48,17 +49,8 @@ def disable_logging(route):
 
 
 def recebendo_ligacao():
-    config = configparser.ConfigParser()
-    try:
-        config.read('state.cfg')
-        caller = config.get('RECEIVING', 'caller')
-        return caller
-    except configparser.Error as e:
-        print(f"Erro ao ler o arquivo de configuração :: {e}")
-        return None
-    except Exception as e:
-        print(f"Erro desconhecido :: {e}")
-        return None
+    caller = db.get_callers_db()
+    return caller
 
 def atualizar_estado_ligacao_db(estado):
     user_id = obter_user_id()
@@ -81,22 +73,13 @@ def atualizar_estado_ligacao_db(estado):
     conn.close()
     
 def verificar_estado_conexao():
-    config = configparser.ConfigParser()
-    try:
-        config.read('state.cfg')
-        estado = config.get('CALL', 'state').strip().lower()
-        if estado == 'conectada':
-            return True
-        elif estado == 'desconectada':
-            return False
-        else:
-            raise ValueError("O arquivo tem um estado inválido.")
-    except FileNotFoundError:
-        print("Arquivo 'state.cfg' não encontrado.")
+    estado = db.get_state_db()
+    if estado == 'conectada':
+        return True
+    elif estado == 'desconectada':
         return False
-    except Exception as e:
-        print(f"Erro ao ler o arquivo: {e}")
-        return False
+    else:
+        raise ValueError("O arquivo tem um estado inválido.")
 
 def clean_phone_number(phone_number):
     # Remove parênteses, hifens e espaços usando regex
@@ -195,19 +178,8 @@ def trigger_sip_route():
 
 @app.route('/recuse_call', methods=['POST'])
 def recuse_call():
-    config = configparser.ConfigParser()
-    config.read('state.cfg')
-    config.set('RECEIVING', 'recive', 'Recusada')
-    with open('state.cfg', 'w') as configfile:
-        config.write(configfile)
-    configfile.close()
-    
-    config = configparser.ConfigParser()
-    config.read('state.cfg')
-    config.set('RECEIVING', 'caller', '')
-    with open('state.cfg', 'w') as configfile:
-        config.write(configfile)
-    configfile.close()
+    db.atualizar_recive_db('Recusada')
+    db.atualizar_caller_db('')
     
     return jsonify({'result': True}), 200
 
@@ -233,19 +205,8 @@ def make_call():
             prm = pj.CallOpParam()
             call.hangup(prm)
     else:
-        config = configparser.ConfigParser()
-        config.read('state.cfg')
-        config.set('RECEIVING', 'recive', 'Atendida')
-        with open('state.cfg', 'w') as configfile:
-            config.write(configfile)
-        configfile.close()
-        
-        config = configparser.ConfigParser()
-        config.read('state.cfg')    
-        config.set('RECEIVING', 'caller', '')
-        with open('state.cfg', 'w') as configfile:
-            config.write(configfile)
-        configfile.close()
+        db.atualizar_recive_db('Atendida')
+        db.atualizar_caller_db('')
         
     return jsonify({'success': True})
 
@@ -259,19 +220,8 @@ def recebendo_true():
         caller = None
 
         # Salvando as alterações de volta para o arquivo
-        config = configparser.ConfigParser()
-        config.read('state.cfg')
-        config.set('RECEIVING', 'recive', 'Recusada')
-        with open('state.cfg', 'w') as configfile:
-            config.write(configfile)
-        configfile.close()
-        
-        config = configparser.ConfigParser()
-        config.read('state.cfg')    
-        config.set('RECEIVING', 'caller', '')
-        with open('state.cfg', 'w') as configfile:
-            config.write(configfile)
-        configfile.close()
+        db.atualizar_recive_db('Recusada')
+        db.atualizar_caller_db('')
             
             
         return jsonify({'message': 'Recebendo é verdadeiro após 8 segundos!'}), 200
@@ -290,12 +240,7 @@ def handle_recebendo_ligacao():
     caller = recebendo_ligacao()
     if caller != "":
         call = sip.incoming_call
-        config = configparser.ConfigParser()
-        config.read('state.cfg')
-        config.set('CALL', 'state', 'conectada')
-        with open('state.cfg', 'w') as configfile:
-            config.write(configfile)
-        configfile.close()
+        db.atualizar_state_db('conectada')
         return jsonify({"caller": caller})
     else:
         return '', 204
