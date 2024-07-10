@@ -1,0 +1,30 @@
+{
+  "name": "Softphone",
+  "short_name": "Softphone",
+  "start_url": "/",
+
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  
+  "icons": [
+    {
+      "src": "/static/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+
+  "display": "standalone",
+  "orientation": "any",
+  "prefer_related_applications": false,
+  
+  "window": {
+    "width": 100,
+    "height": 400
+  }
+}

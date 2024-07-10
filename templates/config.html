@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/style.css') }}">
+    <title>Configuração</title>
+    <link rel="icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
+</head>
+<body>
+    <script>
+        fetch('/lista_usuarios')
+            .then(response => response.json())
+            .then(data => {
+                let tableBody = document.getElementById('userTableBody');
+                data.forEach(row => {
+                    let tr = document.createElement('tr');
+                    let button = document.createElement('button');
+                    button.className = 'table-button';
+                    button.style.display = 'flex';
+                    button.style.justifyContent = 'space-between';
+                    button.style.width = '100%';
+                    button.addEventListener('click', function() {
+                        // Enviar apenas o ID para o servidor Flask via AJAX
+                        fetch(`/botao_clicado/${row[0]}`, {
+                            method: 'POST',
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Resposta do servidor:', data); // Exemplo de resposta do servidor
+                            // Aqui você pode manipular a resposta do servidor conforme necessário
+                        })
+                        .catch(error => console.error('Erro ao enviar dados para o servidor:', error));
+                    });
+                    button.innerHTML = `
+                        <span>${row[2]}</span>
+                        <span class="ramal_span">${row[1]}</span>
+                        <img class="edit-icon" src="https://i.postimg.cc/Gmw8SMMN/edit-btn.png" style="width: 6%; height: 6%;">
+                        <img class="delete-icon" src="https://i.postimg.cc/vmG1G4wt/delete-btn.png" style="width: 6%; height: 6%;">
+                    `;
+                    let td = document.createElement('td');
+                    td.colSpan = '2';
+                    td.appendChild(button);
+                    tr.appendChild(td);
+                    tableBody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Erro ao obter dados:', error));
+    </script>
+    
+    <div class="config-page">
+        <div class="softphone">
+            <a href="{{ url_for('index') }}?timestamp={{ timestamp }}" onclick="limparCache()">
+                <img src="https://i.postimg.cc/HxbX8n0x/seta-direita-1-1.png" alt="config" class="return_btn_img">
+            </a>
+            <button type="button" id="novo_ramal">NOVO RAMAL</button>
+
+            <div class="config_screen hide">
+                <h1>Adicionar Ramal</h1>
+                <form class="add_user" id="form_usuario">
+                    <label for="nome">Nome:</label><br>
+                    <input type="text" id="nome" name="nome"><br><br>
+                
+                    <label for="ramal">Ramal:</label><br>
+                    <input type="text" id="ramal" name="ramal"><br><br>
+                
+                    <label for="sip_server">SIP Server:</label><br>
+                    <input type="text" id="sip_server" name="sip_server"><br><br>
+                
+                    <label for="senha">Senha:</label><br>
+                    <input type="password" id="senha" name="senha"><br><br>
+                
+                    <button type="button" id="salvar">Salvar</button>
+                    <button type="button" id="cancelar">Cancelar</button>
+                </form>
+            </div>
+
+            <div class="show_screen">
+                <h2>Lista de Usuários</h2>
+                <table class="table_ramal">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Ramal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var formUsuario = document.getElementById('form_usuario');
+            var btnSalvar = document.getElementById('salvar');
+        
+            btnSalvar.addEventListener('click', function(event) {
+                event.preventDefault();
+        
+                var formData = new FormData(formUsuario);
+        
+                fetch('/processar_formulario', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao enviar dados. Código de status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('Dados enviados com sucesso!');
+                    formUsuario.reset();
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar dados:', error);
+                    alert('Erro ao enviar dados. Verifique o console para mais detalhes.');
+                });
+            });
+        });
+        
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js', v=timestamp()) }}"></script>
+</body>
+</html>

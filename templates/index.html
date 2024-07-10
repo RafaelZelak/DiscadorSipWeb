@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/style.css') }}?v={{ timestamp() }}">
+    <title>Softphone</title>
+    <link rel="icon" href="{{ url_for('static', filename='icons/favicon.ico') }}?v={{ timestamp() }}">
+</head>
+<body>
+    <div class="softphone">
+        <a href="{{ url_for('configPage') }}?timestamp={{ timestamp }}" class="config_btn" onclick="limparCache()">
+            <img src="https://i.postimg.cc/brQLx8by/config-ico.png" alt="config" class="config_btn_img">
+        </a>
+        <div class="display">
+            <p id="timer">Digite um número</p>
+            <input type="text" id="phoneNumber" placeholder="(00) 00000-0000">
+            <p class="formatNumber">Sem formato</p>
+        </div>
+        <div class="keypad">
+            <div class="row">
+                <button class="key" onclick="addNumber('1')">1</button>
+                <button class="key" onclick="addNumber('2')">2</button>
+                <button class="key" onclick="addNumber('3')">3</button>
+            </div>
+            <div class="row">
+                <button class="key" onclick="addNumber('4')">4</button>
+                <button class="key" onclick="addNumber('5')">5</button>
+                <button class="key" onclick="addNumber('6')">6</button>
+            </div>
+            <div class="row">
+                <button class="key" onclick="addNumber('7')">7</button>
+                <button class="key" onclick="addNumber('8')">8</button>
+                <button class="key" onclick="addNumber('9')">9</button>
+            </div>
+            <div class="row">
+                <button class="key" onclick="addNumber('*')">*</button>
+                <button class="key" onclick="addNumber('0')">0</button>
+                <button class="key" onclick="addNumber('#')">#</button>
+            </div>
+            <div class="row">
+                <button id="callButton" class="call-button-disconnected">Ligar</button>
+                <button id="callButtonRecusar" class="call-button-ligacao-recusar-hide">Recusar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}?v={{ timestamp() }}"></script>
+</body>
+</html>
