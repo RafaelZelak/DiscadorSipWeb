@@ -13,6 +13,17 @@ import time
 import sqlite3
 import base64
 import database as db
+import atexit
+
+#atexit
+
+def encerramento():
+    print('Encerrando...')
+    db.atualizar_caller_db('')
+    db.atualizar_recive_db('')
+    db.atualizar_state_db('desconectada')
+
+atexit.register(encerramento)
 
 #logger
 
@@ -58,15 +69,12 @@ def atualizar_estado_ligacao_db(estado):
     conn = sqlite3.connect('SipUserDB.db')
     cursor = conn.cursor()
 
-    # Verifica se o IDusuario já existe na tabela chamada
     cursor.execute('SELECT IDusuario FROM chamada WHERE IDusuario = ?', (user_id,))
     existing_user = cursor.fetchone()
 
     if existing_user:
-        # Se o usuário já existir, atualiza o estado
         cursor.execute('UPDATE chamada SET state = ? WHERE IDusuario = ?', (estado, user_id))
     else:
-        # Se o usuário não existir, insere um novo registro
         cursor.execute('INSERT INTO chamada (IDusuario, state) VALUES (?, ?)', (user_id, estado))
 
     conn.commit()
@@ -82,7 +90,6 @@ def verificar_estado_conexao():
         raise ValueError("O arquivo tem um estado inválido.")
 
 def clean_phone_number(phone_number):
-    # Remove parênteses, hifens e espaços usando regex
     cleaned_number = re.sub(r'[()\-\s]', '', phone_number)
     return cleaned_number
 
@@ -101,7 +108,6 @@ def initialize_sip():
 
 def clean_up():
     global ep, transport
-    # Limpar recursos SIP
     try:
         if transport:
             transport = None
@@ -111,25 +117,21 @@ def clean_up():
     except Exception as e:
         print(f"Error cleaning up SIP resources: {e}")
 
-# Função para registrar a thread atual no PJSIP
 def register_thread():
     global ep
     if ep:
         ep.libRegisterThread("flask_thread")
 
-# Inicialização do Flask
 app = Flask(__name__)
 
 @app.context_processor
 def inject_timestamp():
     def timestamp():
-        # Retorna o timestamp atual como uma string
         return str(int(time.time()))
     return dict(timestamp=timestamp)
 
 @app.after_request
 def add_header(response):
-    # Para arquivos estáticos, define cabeçalhos de cache
     if 'Cache-Control' not in response.headers:
         response.headers['Cache-Control'] = 'no-store'
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
@@ -178,8 +180,12 @@ def trigger_sip_route():
 
 @app.route('/recuse_call', methods=['POST'])
 def recuse_call():
+    print(sip.incoming_call)
+    print(call)
+    sip.answer_call = False
     db.atualizar_recive_db('Recusada')
     db.atualizar_caller_db('')
+    db.atualizar_state_db('desconectada')
     
     return jsonify({'result': True}), 200
 
@@ -202,9 +208,15 @@ def make_call():
                 print("Destination Number :: NULL")
                 return jsonify({'success': False})
         else:
-            prm = pj.CallOpParam()
-            call.hangup(prm)
+            print('encerrado')
+            if call:
+                prm = pj.CallOpParam()
+                call.hangup(prm)
+            else:
+                prm = pj.CallOpParam()
+                sip.incoming_call.hangup(prm)                
     else:
+        sip.answer_call = True
         db.atualizar_recive_db('Atendida')
         db.atualizar_caller_db('')
         
@@ -218,12 +230,10 @@ def recebendo_true():
     if recebendo:
         call = None
         caller = None
-
-        # Salvando as alterações de volta para o arquivo
+        sip.answer_call = False
         db.atualizar_recive_db('Recusada')
         db.atualizar_caller_db('')
-            
-            
+                
         return jsonify({'message': 'Recebendo é verdadeiro após 8 segundos!'}), 200
     return jsonify({'message': 'Recebendo não é verdadeiro.'}), 400
 
@@ -253,10 +263,8 @@ def processar_formulario():
         sip_server = request.form.get('sip_server')
         senha = request.form.get('senha')
 
-        # Criptografar a senha
         encoded_bytes = base64.b64encode(senha.encode('utf-8'))
         senha_criptografada = encoded_bytes.decode('utf-8')
-        # Conectar ao banco de dados
         conn = conectar_bd()
         cursor = conn.cursor()
 
@@ -279,20 +287,11 @@ def processar_formulario():
 
 @app.route('/lista_usuarios')
 def lista_usuarios():
-    # Conectar ao banco de dados SQLite
     conn = sqlite3.connect('SipUserDB.db')
     cursor = conn.cursor()
-
-    # Executar a consulta para selecionar todos os registros
     cursor.execute('SELECT ID, username, name FROM usuario')
-
-    # Recuperar todos os resultados da consulta
     rows = cursor.fetchall()
-
-    # Fechar a conexão com o banco de dados
     conn.close()
-
-    # Converter os resultados para um formato JSON e retornar como resposta
     return jsonify(rows)
 
 def salvar_id_em_arquivo(id):

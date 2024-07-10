@@ -210,70 +210,12 @@ class MyCall(pj.Call):
             global incoming_call
             global call_number
             incoming_call = None
-            now = datetime.datetime.now()
-            datetime_string = now.strftime("%Y-%m-%d %H:%M:%S")
-            with open('call.txt', 'r+') as file:
-                lines = file.readlines()
-                if len(lines) >= 4:
-                    lines[3] = datetime_string + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                    file.truncate()
-                else:
-                    lines.extend(['\n'] * (4 - len(lines)))  # Adiciona linhas vazias se não houver 5 linhas
-                    lines[3] = datetime_string + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                if len(lines) >= 5:
-                    lines[4] = "Encerrado" + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                    file.truncate()
-                else:
-                    lines.extend(['\n'] * (5 - len(lines)))  # Adiciona linhas vazias se não houver 5 linhas
-                    lines[4] = "Encerrado" + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
 
         elif call_info.state == pj.PJSIP_INV_STATE_CONFIRMED:
             print("Call connected")
             atualizar_estado_ligacao('conectada')
             atualizar_estado_ligacao_db('conectada')
             print(f"Call number: {call_number}")  # Imprimir o número da chamada conectada
-            now = datetime.datetime.now()
-            datetime_string = now.strftime("%Y-%m-%d %H:%M:%S")
-            with open('call.txt', 'r+') as file:
-                lines = file.readlines()
-                if len(lines) >= 3:
-                    lines[2] = datetime_string + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                    file.truncate()
-                else:
-                    lines.extend(['\n'] * (3 - len(lines)))  # Adiciona linhas vazias se não houver 5 linhas
-                    lines[2] = datetime_string + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                if len(lines) >= 1:
-                    lines[0] = "True" + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                    file.truncate()
-                else:
-                    lines.extend(['\n'] * (1 - len(lines)))  # Adiciona linhas vazias se não houver 5 linhas
-                    lines[0] = "True" + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                if len(lines) >= 5:
-                    lines[4] = "Andamento" + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
-                    file.truncate()
-                else:
-                    lines.extend(['\n'] * (5 - len(lines)))  # Adiciona linhas vazias se não houver 5 linhas
-                    lines[4] = "Andamento" + "\n"
-                    file.seek(0)
-                    file.writelines(lines)
             
     def onCallMediaState(self, prm):
         global call_onoff
@@ -310,12 +252,10 @@ class MyAccount(pj.Account):
         print("Registration status: ", prm.code)
         if prm.code == 200:
             print("Registrado com sucesso!")
-            atualizar_login_status(1)
         else:
             print("Falha no registro.")
             print(f"Código de erro: {prm.code}")
             print(f"Razão da falha: {prm.reason}")
-            atualizar_login_status(0)
             
     def onIncomingCall(self, prm):
         global incoming_call, call_number, answer_call, caller_number
@@ -337,19 +277,6 @@ class MyAccount(pj.Account):
         else:
             prm = pj.CallOpParam()
             incoming_call.hangup(prm)
-
-
-
-
-def atualizar_login_status(status):
-    with open('config.cfg', 'r') as file:
-        lines = file.readlines()
-    if len(lines) < 6:
-        lines.extend(['\n'] * (6 - len(lines)))
-    lines[5] = f'login: {status}\n'
-    with open('config.cfg', 'w') as file:
-        file.writelines(lines)
-
 
 incoming_call = None
 
