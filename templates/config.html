@@ -67,7 +67,7 @@
                     <input type="text" id="nome" name="nome"><br><br>
                 
                     <label for="ramal">Ramal:</label><br>
-                    <input type="text" id="ramal" name="ramal"><br><br>
+                    <input type="text" id="ramal" name="ramal" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><br><br>
                 
                     <label for="sip_server">SIP Server:</label><br>
                     <input type="text" id="sip_server" name="sip_server"><br><br>
@@ -79,7 +79,6 @@
                     <button type="button" id="cancelar">Cancelar</button>
                 </form>
             </div>
-
             <div class="show_screen">
                 <h2>Lista de Usuários</h2>
                 <table class="table_ramal">
@@ -116,14 +115,6 @@
                     }
                     return response.json();
                 })
-                .then(data => {
-                    alert('Dados enviados com sucesso!');
-                    formUsuario.reset();
-                })
-                .catch(error => {
-                    console.error('Erro ao enviar dados:', error);
-                    alert('Erro ao enviar dados. Verifique o console para mais detalhes.');
-                });
             });
         });
         

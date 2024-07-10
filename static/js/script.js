@@ -6,25 +6,43 @@ let timer;
 let seconds = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Mostrar formulário ao clicar em NOVO RAMAL
     document.getElementById('novo_ramal').addEventListener('click', function() {
         document.querySelector('.show_screen').classList.add('hide');
         document.querySelector('.config_screen').classList.remove('hide');
     });
 
-    // Esconder formulário ao clicar em Cancelar
     document.getElementById('cancelar').addEventListener('click', function() {
         document.querySelector('.config_screen').classList.add('hide');
         document.querySelector('.show_screen').classList.remove('hide');
     });
 
-    // Esconder formulário ao clicar em Salvar
     document.getElementById('salvar').addEventListener('click', function() {
         document.querySelector('.config_screen').classList.add('hide');
         document.querySelector('.show_screen').classList.remove('hide');
-        // Aqui você pode adicionar a lógica para salvar os dados se necessário
     });
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    var inputNome = document.getElementById('nome');
+
+    inputNome.addEventListener('input', function() {
+        var valor = inputNome.value;
+        
+        valor = valor.replace(/[^\w\s]/gi, '');
+        
+        if (valor.length > 25) {
+            valor = valor.slice(0, 25);
+            inputNome.classList.add('error');
+            
+            setTimeout(function() {
+                inputNome.classList.remove('error');
+            }, 1000);
+        }  
+        inputNome.value = valor;
+    });
+});
+
 
 document.addEventListener('DOMContentLoaded', function() {
 
