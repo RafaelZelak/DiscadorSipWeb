@@ -4,7 +4,6 @@ import app
 import socket
 import datetime
 import threading
-import tkinter as tk
 import time
 import re
 import configparser
@@ -12,7 +11,6 @@ import sqlite3
 import base64
 import json
 import database as db
-
 
 # Variável global para o endpoint
 ep = None
