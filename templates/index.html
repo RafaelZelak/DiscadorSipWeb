@@ -12,12 +12,17 @@
     <title>Softphone</title>
     <link rel="icon" href="{{ url_for('static', filename='icons/favicon.ico') }}?v={{ timestamp() }}">
 </head>
+
 <body>
     <div class="softphone">
         <a href="{{ url_for('configPage') }}?timestamp={{ timestamp }}" class="config_btn" onclick="limparCache()">
             <img src="https://i.postimg.cc/brQLx8by/config-ico.png" alt="config" class="config_btn_img">
         </a>
-        
+        <div class='toggle-btn'>
+            <button id="toggle" class="toggle-btn-b"></button>
+            <audio id="audio" autoplay></audio>
+        </div>
+
         <div class="display">
             <p id="timer">Digite um número</p>
             <input type="text" id="phoneNumber" placeholder="(00) 00000-0000">
@@ -49,8 +54,11 @@
                 <button id="callButtonRecusar" class="call-button-ligacao-recusar-hide">Recusar</button>
             </div>
         </div>
+
     </div>
-    
+
+
+
     <script src="{{ url_for('static', filename='js/script.js') }}?v={{ timestamp() }}"></script>
 </body>
 </html>

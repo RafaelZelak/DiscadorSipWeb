@@ -417,3 +417,35 @@ input:focus {
 #confirmBtn:hover, #cancelBtn:hover {
   background-color: #555; /* Cor de fundo dos botões ao passar o mouse */
 }
+
+
+.toggle-btn{
+  position: absolute;
+}
+
+.toggle-btn-b{
+  border: none;
+  cursor: pointer;
+  outline: none;
+  animation: none;
+  border-radius: 50%;
+  background-color: rgba(184, 0, 0, 0.5);
+  width: 20px;
+  height: 20px;
+  margin-left: 1420%;
+  margin-top: -50%;
+}
+
+.toggle-btn-b.active {
+  animation: blink 1s infinite;
+}
+
+
+@keyframes blink {
+  0%, 100%{
+      background-color: rgba(184, 0, 0, 0.5);
+  }
+  50% {
+      background-color: rgba(255, 0, 0, 0.75);
+  }
+}

@@ -310,7 +310,7 @@ def favicon():
 
 if __name__ == '__main__':
     try:
-        app.run(debug=True)
+        app.run( host='0.0.0.0', port=5000, debug=True, ssl_context=('server.crt', 'server.key'))
     except Exception as e:
         print(f"Failed to start Flask app: {e}")
     finally:
