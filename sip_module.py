@@ -4,7 +4,6 @@ import app
 import socket
 import datetime
 import threading
-import tkinter as tk
 import time
 import re
 import configparser
@@ -12,7 +11,6 @@ import sqlite3
 import base64
 import json
 import database as db
-
 
 # Variável global para o endpoint
 ep = None
@@ -298,7 +296,7 @@ def create_transport():
     ep = pj.Endpoint()
     ep.libCreate()
     ep_cfg = pj.EpConfig()
-    ep_cfg.logConfig.level = 0
+    ep_cfg.logConfig.level = 5
 
     try:
         ep.libInit(ep_cfg)
@@ -307,7 +305,7 @@ def create_transport():
         return None, None
 
     transport_cfg = pj.TransportConfig()
-    transport_cfg.port = find_available_port(5060)
+    transport_cfg.port = find_available_port(5070)
 
     try:
         transport = ep.transportCreate(pj.PJSIP_TRANSPORT_UDP, transport_cfg)
