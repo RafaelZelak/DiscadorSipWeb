@@ -14,7 +14,12 @@
 </head>
 
 <body>
+    <div class="username">
+        <h3>Bem-vindo, {{ user }}!</h3>
+        <p>Ramal: {{ phone_number }}</p>
+    </div>
     <div class="softphone">
+        
         <a href="{{ url_for('configPage') }}?timestamp={{ timestamp }}" class="config_btn" onclick="limparCache()">
             <img src="https://i.postimg.cc/brQLx8by/config-ico.png" alt="config" class="config_btn_img">
         </a>
@@ -54,8 +59,22 @@
                 <button id="callButtonRecusar" class="call-button-ligacao-recusar-hide">Recusar</button>
             </div>
         </div>
-
-    </div>
+        <form id="logoutForm" action="{{ url_for('logout') }}" method="post" class="logout">
+            <button type="button" onclick="showModal()">Logout</button>
+        </form>
+    
+        <!-- O Modal -->
+        <div id="logoutModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    Você realmente deseja sair da sua conta, {{ user }}?
+                </div>
+                <div class="modal-footer">
+                    <button onclick="confirmLogout()">Sim Sair</button>
+                    <button onclick="closeModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
 
 
 

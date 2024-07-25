@@ -94,7 +94,7 @@ input:focus {
 .call-button-disconnected {
   margin-top: 65%;
   background-color: #22912b;
-  color: #ffffff;
+  color: #e0ffd4;
   border: none;
   padding: 15px;
   font-size: 18px;
@@ -103,6 +103,9 @@ input:focus {
   transition: background-color 0.3s ease;
   position: relative;
   width: 322%;
+}
+.call-button-disconnected:hover{
+  background-color: #32af3d;
 }
 
 .call-button-ligacao-atender{
@@ -155,7 +158,7 @@ input:focus {
 
 .call-button-disconnected:active {
   transition: background-color 0.3s ease;
-  background-color: #dcecdd;
+  background-color: #baebbd;
   color: #1f2b20
 }
 
@@ -449,3 +452,98 @@ input:focus {
       background-color: rgba(255, 0, 0, 0.75);
   }
 }
+
+.username{
+  color: #646464;
+  position: absolute;
+  top: 0;
+  left: 20px;
+}
+.username p{
+  margin-top: -12px;
+}
+
+.logout {
+  position: absolute;
+  left: .8%;
+  bottom: 1.8%;
+}
+.logout button {
+  background-color: #ff6e6175; /* Laranja suave */
+  color: rgba(255, 255, 255, 0.432);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.logout button:hover {
+  background-color: #FF4C40; /* Laranja mais escuro */
+  transform: scale(1.10);
+  color: white;
+}
+.logout button:active {
+  background-color: #FF3D2E; /* Laranja mais intenso */
+  transform: scale(0.85);
+  color: white;
+}
+
+        /* Estilo do modal */
+        .modal {
+          display: none;
+          position: fixed;
+          z-index: 1;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          overflow: auto;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center; /* Centraliza verticalmente */
+          justify-content: center; /* Centraliza horizontalmente */
+      }
+      .modal-content {
+          background-color: #2e3036e0;
+          padding: 20px;
+          border-radius: 5px;
+          width: 100%;
+          max-width: 400px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 140px; /* Ajuste a altura conforme necessário */
+      }
+      .modal-header {
+          font-size: 24px;
+          margin-bottom: 20px;
+      }
+      .modal-footer {
+          display: flex;
+          justify-content: space-between;
+          padding: 0 80px; /* Adiciona um pouco de padding nas laterais */
+      }
+      .modal button {
+          background-color: #ff5b5b75;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          padding: 10px 10px; /* Ajustado para largura dos botões */
+          font-size: 16px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+          transition: background-color 0.3s, transform 0.3s;
+      }
+      .modal button:hover {
+        background-color: #FF4C40; /* Laranja mais escuro */
+        transform: scale(1.05);
+        color: white;
+      }
+      .modal button:active {
+        background-color: #FF3D2E; /* Laranja mais intenso */
+        transform: scale(0.95);
+        color: white;
+      }

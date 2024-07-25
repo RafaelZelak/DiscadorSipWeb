@@ -296,7 +296,7 @@ def create_transport():
     ep = pj.Endpoint()
     ep.libCreate()
     ep_cfg = pj.EpConfig()
-    ep_cfg.logConfig.level = 5
+    ep_cfg.logConfig.level = 0
 
     try:
         ep.libInit(ep_cfg)
@@ -305,7 +305,7 @@ def create_transport():
         return None, None
 
     transport_cfg = pj.TransportConfig()
-    transport_cfg.port = find_available_port(5070)
+    transport_cfg.port = find_available_port(5060)
 
     try:
         transport = ep.transportCreate(pj.PJSIP_TRANSPORT_UDP, transport_cfg)

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        
+        input{
+            border: none !important;
+            outline: none !important;;
+        }
+        .error-message {
+            position: fixed;
+            top: -60px; /* Inicialmente fora da tela */
+            left: 0;
+            right: 0;
+            background-color: #bd5f67a4;
+            color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            transition: top 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            opacity: 0; /* Inicialmente invisível */
+            z-index: 1000;
+        }
+
+        .error-message.show {
+            top: 0; /* Aparece na tela */
+            opacity: 1; /* Visível */
+        }
+
+        /* Estilos personalizados */
+        body {
+            background-color: #1e1e1e; /* Escala de tom escuro */
+        }
+        .container {
+            background-color: #2e2e2e; /* Escala de tom médio */
+        }
+        .text-primary {
+            color: #f1fefe; /* Escala de tom claro para o texto */
+        }
+        .input-field {
+            background-color: #4e4e4e; /* Cor de fundo dos inputs */
+            border-color: #4e4e4e; /* Cor da borda dos inputs */
+            color: #f1fefe; /* Cor do texto dos inputs */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <!-- Mensagem de erro -->
+    {% if error_message %}
+    <div id="error-message" class="error-message show">
+        {{ error_message }}
+    </div>
+    {% else %}
+    <div id="error-message" class="error-message">
+        <p>Deslogado de sua conta</p>
+    </div>
+    {% endif %}
+
+    <div class="container p-8 rounded shadow-md w-96">
+        <h1 class="text-2xl font-bold mb-6 text-center text-primary">Login</h1>
+        <form method="POST" action="/">
+            <div class="mb-4">
+                <label for="login" class="block text-primary">Login</label>
+                <input type="text" id="login" name="login" class="w-full p-2 input-field rounded" required>
+                <small class="block text-gray-500 mt-1">nome.ultimoSobrenome</small>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block text-primary">Senha</label>
+                <input type="password" id="password" name="password" class="w-full p-2 input-field rounded" required>
+                <small class="block text-gray-500 mt-1">senha do computador</small>
+            </div>
+            <button type="submit" class="w-full bg-blue-800 text-white p-2 rounded hover:bg-blue-900">Entrar</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorMessage = document.getElementById('error-message');
+            
+            // Verifica o status da mensagem de erro no localStorage
+            const errorStatus = localStorage.getItem('errorStatus');
+
+            if (errorStatus === 'true') {
+                // Exibir a mensagem de erro
+                errorMessage.classList.add('show');
+
+                // Ocultar a mensagem de erro após 3 segundos
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                    
+                    // Limpar o status do localStorage após ocultar a mensagem
+                    localStorage.removeItem('errorStatus');
+                }, 1000); // Tempo em milissegundos para ocultar a mensagem (3 segundos)
+            } else {
+                // Garantir que a mensagem de erro não seja exibida se não houver status de erro
+                errorMessage.classList.remove('show');
+            }
+        });
+
+        // Função para definir o status de erro no localStorage
+        function setErrorStatus() {
+            localStorage.setItem('errorStatus', 'true');
+        }
+
+        // Adiciona a função ao formulário de login
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                setErrorStatus();
+            });
+        }
+    </script>
+</body>
+</html>

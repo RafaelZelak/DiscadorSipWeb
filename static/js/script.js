@@ -396,3 +396,42 @@ document.addEventListener('DOMContentLoaded', () => {
         isRecording = !isRecording;
     });
 });
+
+const socket = new WebSocket('ws://192.168.15.239:5000/audio'); // Substitua com o endereço do seu servidor
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(1024, 1, 1);
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+
+        processor.onaudioprocess = (event) => {
+            const inputBuffer = event.inputBuffer.getChannelData(0);
+            socket.send(inputBuffer);
+        };
+    })
+    .catch(err => {
+        console.error('Erro ao acessar o dispositivo de áudio:', err);
+    });
+
+        function showModal() {
+            document.getElementById('logoutModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            document.getElementById('logoutForm').submit();
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById('logoutModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }

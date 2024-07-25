@@ -1,5 +1,6 @@
-from flask import Flask, render_template, send_from_directory, request, jsonify, make_response
+from flask import Flask, render_template, send_from_directory, request, jsonify, make_response,redirect,url_for,session,flash
 from flask_cachebuster import CacheBuster
+from ldap3 import Connection, Server, ALL_ATTRIBUTES
 import json
 import os
 import re
@@ -14,6 +15,7 @@ import sqlite3
 import base64
 import database as db
 import atexit
+import Asterisk
 
 #atexit
 
@@ -36,6 +38,33 @@ transport = None
 account = None
 call = None
 sip_is_active = False
+
+def get_user_details(login, password, domain='digitalup.intranet'):
+    server = Server(domain, get_info=ALL_ATTRIBUTES)
+    user = f'{login}@{domain}'
+    con = Connection(server, user=user, password=password)
+    
+    try:
+        if con.bind():
+            con.search(search_base='DC=digitalup,DC=intranet',
+                       search_filter=f'(sAMAccountName={login})',
+                       attributes=['cn', 'homePhone'])
+            if con.entries:
+                user_entry = con.entries[0]
+                print("Atributos retornados:", user_entry.entry_attributes_as_dict)  # Para depuração
+                full_name = str(user_entry.cn) if 'cn' in user_entry else None
+                phone_number = user_entry.homePhone[0] if 'homePhone' in user_entry and user_entry.homePhone else None
+                
+                print(Asterisk.get_ramal_password(phone_number))
+                return full_name, phone_number
+            return None, None
+        else:
+            return None, None
+    except Exception as e:
+        print(f"Ocorreu um erro durante a autenticação: {e}")
+        return None, None
+    finally:
+        con.unbind()
 
 def obter_user_id():
     with open('id_salvo.json', 'r') as file:
@@ -123,6 +152,7 @@ def register_thread():
         ep.libRegisterThread("flask_thread")
 
 app = Flask(__name__)
+app.secret_key = 'calvo'
 
 @app.context_processor
 def inject_timestamp():
@@ -151,9 +181,32 @@ cachebuster = CacheBuster(config={
 cachebuster.init_app(app)
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if 'user' in session:
+        return redirect(url_for('index'))
+    
+    error_message = None
+    if request.method == 'POST':
+        login = request.form['login']
+        password = request.form['password']
+        
+        full_name, phone_number = get_user_details(login, password)
+        
+        if full_name:
+            session['user'] = {'full_name': full_name, 'phone_number': phone_number}
+            return redirect(url_for('index'))
+        else:
+            error_message = "Credenciais inválidas"
+    
+    return render_template('login.html', error_message=error_message)
+
+@app.route('/index')
 def index():
-    return render_template('index.html')
+    if 'user' in session:
+        user = session['user']
+        return render_template('index.html', user=user['full_name'], phone_number=user['phone_number'])
+    return redirect(url_for('login'))
 
 @app.route('/config')
 def configPage():
@@ -255,58 +308,63 @@ def handle_recebendo_ligacao():
     else:
         return '', 204
     
-@app.route('/processar_formulario', methods=['POST'])
-def processar_formulario():
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        ramal = request.form.get('ramal')
-        sip_server = request.form.get('sip_server')
-        senha = request.form.get('senha')
+# @app.route('/processar_formulario', methods=['POST'])
+# def processar_formulario():
+#     if request.method == 'POST':
+#         nome = request.form.get('nome')
+#         ramal = request.form.get('ramal')
+#         sip_server = request.form.get('sip_server')
+#         senha = request.form.get('senha')
 
-        encoded_bytes = base64.b64encode(senha.encode('utf-8'))
-        senha_criptografada = encoded_bytes.decode('utf-8')
-        conn = conectar_bd()
-        cursor = conn.cursor()
+#         encoded_bytes = base64.b64encode(senha.encode('utf-8'))
+#         senha_criptografada = encoded_bytes.decode('utf-8')
+#         conn = conectar_bd()
+#         cursor = conn.cursor()
 
-        insert_usuario_sql = '''
-        INSERT INTO usuario (name, username, password, sipServer)
-        VALUES (?, ?, ?, ?)
-        '''
+#         insert_usuario_sql = '''
+#         INSERT INTO usuario (name, username, password, sipServer)
+#         VALUES (?, ?, ?, ?)
+#         '''
 
-        try:
-            cursor.execute(insert_usuario_sql, (nome, ramal, senha_criptografada, sip_server))
-            conn.commit()
-            conn.close()
-            resposta = {'status': 'ok', 'message': 'Dados inseridos com sucesso no banco de dados.'}
-        except sqlite3.Error as e:
-            conn.rollback()
-            conn.close()
-            resposta = {'status': 'erro', 'message': f'Erro ao inserir dados no banco de dados: {str(e)}'}
+#         try:
+#             cursor.execute(insert_usuario_sql, (nome, ramal, senha_criptografada, sip_server))
+#             conn.commit()
+#             conn.close()
+#             resposta = {'status': 'ok', 'message': 'Dados inseridos com sucesso no banco de dados.'}
+#         except sqlite3.Error as e:
+#             conn.rollback()
+#             conn.close()
+#             resposta = {'status': 'erro', 'message': f'Erro ao inserir dados no banco de dados: {str(e)}'}
 
-        return jsonify(resposta)
+#         return jsonify(resposta)
 
-@app.route('/lista_usuarios')
-def lista_usuarios():
-    conn = sqlite3.connect('SipUserDB.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT ID, username, name FROM usuario')
-    rows = cursor.fetchall()
-    conn.close()
-    return jsonify(rows)
+# @app.route('/lista_usuarios')
+# def lista_usuarios():
+#     conn = sqlite3.connect('SipUserDB.db')
+#     cursor = conn.cursor()
+#     cursor.execute('SELECT ID, username, name FROM usuario')
+#     rows = cursor.fetchall()
+#     conn.close()
+#     return jsonify(rows)
 
-def salvar_id_em_arquivo(id):
-    data = {'id': id}
-    with open('id_salvo.json', 'w') as file:
-        json.dump(data, file)
+# def salvar_id_em_arquivo(id):
+#     data = {'id': id}
+#     with open('id_salvo.json', 'w') as file:
+#         json.dump(data, file)
 
-@app.route('/botao_clicado/<int:id>', methods=['POST'])
-def botao_clicado(id):
-    salvar_id_em_arquivo(id)
-    return jsonify({'message': f'{id} salvo com sucesso'})
+# @app.route('/botao_clicado/<int:id>', methods=['POST'])
+# def botao_clicado(id):
+#     salvar_id_em_arquivo(id)
+#     return jsonify({'message': f'{id} salvo com sucesso'})
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static/icons'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login', _scheme='https', _external=True))
 
 if __name__ == '__main__':
     try:
