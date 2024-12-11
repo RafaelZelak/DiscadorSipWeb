@@ -163,29 +163,34 @@ function sanitizeInput() {
 }
 
 
-document.getElementById("callButton").addEventListener("click", function() {
-  var phoneNumber = document.getElementById("phoneNumber").value;
-  fetch('/make_call', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ phone_number: phoneNumber })
-  })
+document.getElementById("callButton").addEventListener("click", async function() {
+    var phoneNumber = document.getElementById("phoneNumber").value;
+    console.log("Making call to: " + phoneNumber);
+    try {
+        const response = await fetch('/make_call', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ phone_number: phoneNumber })
+        });
 
+        if (!response.ok) {
+            throw new Error('Erro na requisição: ' + response.statusText);
+        }
 
-  .then(response => response.json())
-  .then(data => {
-      if (data.success) {
-          console.log(data.success);
-      } else if (data.error) {
-          console.error(data.error);
-      }
-  })
-  .catch(error => {
-      console.error('Error:', error);
-  });
+        const data = await response.json();
+
+        if (data.success) {
+            console.log(data.success);
+        } else if (data.error) {
+            console.error(data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 });
+
 
 
 if ('serviceWorker' in navigator) {
@@ -333,3 +338,100 @@ document.addEventListener('DOMContentLoaded', function() {
     iniciarRecebendoLigacao();
 
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleButton = document.getElementById('toggle');
+    const audioElement = document.getElementById('audio');
+
+    let mediaStream;
+    let audioContext;
+    let gainNode;
+    let source;
+    let isRecording = false;
+
+    toggleButton.addEventListener('click', async () => {
+        if (!isRecording) {
+            // Solicita permissão para acessar o microfone
+            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // Cria um contexto de áudio
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Cria um node de ganho (controle de volume)
+            gainNode = audioContext.createGain();
+            
+            // Cria uma fonte de áudio a partir do stream
+            source = audioContext.createMediaStreamSource(mediaStream);
+
+            // Conecta a fonte ao node de ganho
+            source.connect(gainNode);
+
+            // Conecta o node de ganho ao destino (alto-falante)
+            gainNode.connect(audioContext.destination);
+
+            // Conecta o stream ao elemento de áudio
+            audioElement.srcObject = mediaStream;
+
+            // Inicia a reprodução automática do áudio
+            audioElement.play();
+
+            // Ativa a animação de piscar
+            toggleButton.classList.add('active');
+        } else {
+            // Para a reprodução do áudio e desativa o stream
+            const tracks = mediaStream.getTracks();
+            tracks.forEach(track => track.stop());
+            audioElement.srcObject = null;
+
+            // Desconecta o audioContext
+            if (audioContext) {
+                audioContext.close();
+            }
+
+            // Desativa a animação de piscar
+            toggleButton.classList.remove('active');
+        }
+
+        // Alterna o estado de gravação
+        isRecording = !isRecording;
+    });
+});
+
+const socket = new WebSocket('ws://192.168.15.239:5000/audio'); // Substitua com o endereço do seu servidor
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(1024, 1, 1);
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+
+        processor.onaudioprocess = (event) => {
+            const inputBuffer = event.inputBuffer.getChannelData(0);
+            socket.send(inputBuffer);
+        };
+    })
+    .catch(err => {
+        console.error('Erro ao acessar o dispositivo de áudio:', err);
+    });
+
+        function showModal() {
+            document.getElementById('logoutModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            document.getElementById('logoutForm').submit();
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById('logoutModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
